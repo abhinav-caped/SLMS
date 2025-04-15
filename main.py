@@ -757,13 +757,13 @@ def student_home():
     student = Students.query.join(Users, Students.student_id == Users.user_id)\
              .filter(Students.student_id == student_id).first()
     
-    # Get today's schedule (assuming current day)
-    today = datetime.now().strftime('%A')  # e.g., 'Monday'
+    # Get today's schedule
+    today = datetime.now().strftime('%A')
     today_schedule = WeeklySchedule.query.join(Course, WeeklySchedule.course_id == Course.course_id)\
                     .filter(WeeklySchedule.student_id == student_id, 
                             WeeklySchedule.day_of_week == today).all()
     
-    # Calculate CGPA (simplified version)
+    # Calculate CGPA
     academic_records = AcademicRecords.query.filter_by(student_id=student_id).all()
     total_points = 0
     total_credits_taken = 0
@@ -772,7 +772,6 @@ def student_home():
         course = Course.query.filter_by(course_id=record.course_id).first()
         total_marks = record.internal_marks + record.final_marks
         
-        # Simple grade calculation
         if total_marks >= 90:
             grade_point = 10
         elif total_marks >= 80:
@@ -791,33 +790,37 @@ def student_home():
     
     cgpa = round(total_points / total_credits_taken, 2) if total_credits_taken > 0 else 0
     
-    # Get average attendance
-    attendance_sum = sum(record.attendance_percent for record in academic_records)
-    attendance_avg = round(attendance_sum / len(academic_records)) if academic_records else 0
+    # Calculate average attendance from Attendance model
+    attendance_records = Attendance.query.filter_by(student_id=student_id).all()
+    attendance_sum = 0
+    attendance_count = 0
     
-    # Get hostel data
+    for record in attendance_records:
+        if record.total_classes and record.total_classes > 0:
+            attendance_percent = (record.present / record.total_classes) * 100
+            attendance_sum += attendance_percent
+            attendance_count += 1
+    
+    attendance_avg = round(attendance_sum / attendance_count) if attendance_count > 0 else 0
+    
+    # Rest of the route remains the same
     current_year = datetime.now().year
     hostel_data = HostelData.query.join(HostelRooms, HostelData.room_type == HostelRooms.room_type)\
                  .filter(HostelData.student_id == student_id, HostelData.year == current_year).first()
     
-    # Get mess data
-    current_month = datetime.now().strftime('%B')  # e.g., 'April'
+    current_month = datetime.now().strftime('%B')
     mess_data = MessSubscription.query.join(MessPlan, MessSubscription.mess_name == MessPlan.mess_name)\
                .filter(MessSubscription.student_id == student_id, 
                        MessSubscription.month == current_month).first()
     
-    # Get recent applications
     recent_applications = Applications.query.filter_by(student_id=student_id)\
                          .order_by(Applications.submission_date.desc()).limit(3).all()
     
-    # Get recent achievements
     recent_achievements = Achievements.query.filter_by(student_id=student_id)\
                          .order_by(Achievements.achievement_date.desc()).limit(3).all()
     
-    # Get club memberships
     clubs = Clubs.query.filter_by(student_id=student_id).all()
     
-    # Total required credits for graduation (example value)
     total_required_credits = 180
     
     return render_template('student/home.html',
