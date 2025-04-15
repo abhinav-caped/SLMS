@@ -178,3 +178,15 @@ body {
         padding-top: 48px;
     }
 }
+
+
+.login-page {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Optional: centers the form horizontally */
+    padding-top: 40px;
+    padding-bottom: 40px;
+    background: url('static/image/default-profile.png') no-repeat center center fixed;
+    background-size: cover;
+    height: 100vh;
+}
