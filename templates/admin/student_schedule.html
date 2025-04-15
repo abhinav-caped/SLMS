@@ -1,0 +1,750 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Student Schedule Management - University Management System</title> <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}"> <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> </head> <body> <nav class="navbar navbar-expand-lg navbar-dark bg-primary"> <div class="container-fluid"> <a class="navbar-brand" href="{{ url_for('admin_home') }}">Admin Dashboard</a> <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button> <div class="collapse navbar-collapse" id="navbarNav"> <ul class="navbar-nav"> <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_home') }}">Home</a></li> <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_students') }}">Students</a></li> <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_faculty') }}">Faculty</a></li> <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_courses') }}">Courses</a></li> <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_departments') }}">Departments</a></li> </ul> </div> <form class="d-flex me-2"> <input class="form-control me-2" type="search" placeholder="Search Students" aria-label="Search" id="studentSearch"> </form> <div class="d-flex"> <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Logout</a> </div> </div> </nav>
+    text
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_students') }}">
+                                <i class="fas fa-users"></i> All Students
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_academic') }}">
+                                <i class="fas fa-graduation-cap"></i> Academic Records
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_attendance') }}">
+                                <i class="fas fa-clipboard-check"></i> Attendance
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_hostel') }}">
+                                <i class="fas fa-building"></i> Hostel Data
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_mess') }}">
+                                <i class="fas fa-utensils"></i> Mess Subscriptions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_achievements') }}">
+                                <i class="fas fa-trophy"></i> Achievements
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_clubs') }}">
+                                <i class="fas fa-users-cog"></i> Clubs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_applications') }}">
+                                <i class="fas fa-file-alt"></i> Applications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('admin_student_schedule') }}">
+                                <i class="fas fa-calendar-alt"></i> Weekly Schedule
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+    
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Weekly Schedule Management</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                            <i class="fas fa-plus"></i> Add Class Schedule
+                        </button>
+                    </div>
+                </div>
+    
+                <!-- Student Selection -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">View Student Schedule</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="studentSelect" class="form-label">Select Student</label>
+                                <select class="form-select" id="studentSelect">
+                                    <option value="">-- Select Student --</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.student_id }}">{{ student.name }} ({{ student.student_id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="daySelect" class="form-label">Day of Week</label>
+                                <select class="form-select" id="daySelect">
+                                    <option value="">All Days</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" id="loadScheduleBtn">
+                            <i class="fas fa-search"></i> Load Schedule
+                        </button>
+                    </div>
+                </div>
+    
+                <!-- Weekly Schedule -->
+                <div class="card" id="scheduleCard" style="display: none;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Weekly Schedule</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Time / Day</th>
+                                        <th>Monday</th>
+                                        <th>Tuesday</th>
+                                        <th>Wednesday</th>
+                                        <th>Thursday</th>
+                                        <th>Friday</th>
+                                        <th>Saturday</th>
+                                        <th>Sunday</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scheduleTableBody">
+                                    <!-- Schedule will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+    
+                <!-- Schedule List -->
+                <div class="card mt-4" id="scheduleListCard" style="display: none;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Class Schedule List</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Day</th>
+                                        <th>Start Time</th>
+                                        <th>End Time</th>
+                                        <th>Course</th>
+                                        <th>Faculty</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scheduleListTableBody">
+                                    <!-- Schedule list will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Add Schedule Modal -->
+    <div class="modal fade" id="addScheduleModal" tabindex="-1" aria-labelledby="addScheduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addScheduleModalLabel">Add Class Schedule</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addScheduleForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="scheduleStudentSelect" class="form-label">Student</label>
+                                <select class="form-select" id="scheduleStudentSelect" required>
+                                    <option value="">-- Select Student --</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.student_id }}">{{ student.name }} ({{ student.student_id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="scheduleFacultySelect" class="form-label">Faculty</label>
+                                <select class="form-select" id="scheduleFacultySelect" required>
+                                    <option value="">-- Select Faculty --</option>
+                                    {% for faculty in faculty %}
+                                    <option value="{{ faculty.faculty_id }}">{{ faculty.name }} ({{ faculty.faculty_id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="scheduleCourseSelect" class="form-label">Course</label>
+                                <select class="form-select" id="scheduleCourseSelect" required>
+                                    <option value="">-- Select Course --</option>
+                                    {% for course in courses %}
+                                    <option value="{{ course.course_id }}">{{ course.course_id }} - {{ course.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="scheduleDaySelect" class="form-label">Day of Week</label>
+                                <select class="form-select" id="scheduleDaySelect" required>
+                                    <option value="">-- Select Day --</option>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="scheduleStartTimeInput" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="scheduleStartTimeInput" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="scheduleEndTimeInput" class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="scheduleEndTimeInput" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveScheduleBtn">Save Schedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Schedule Modal -->
+    <div class="modal fade" id="editScheduleModal" tabindex="-1" aria-labelledby="editScheduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editScheduleModalLabel">Edit Class Schedule</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editScheduleForm">
+                        <input type="hidden" id="editStudentId">
+                        <input type="hidden" id="editCourseId">
+                        <input type="hidden" id="editDayOfWeek">
+                        <input type="hidden" id="editOriginalStartTime">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editFacultySelect" class="form-label">Faculty</label>
+                                <select class="form-select" id="editFacultySelect" required>
+                                    <option value="">-- Select Faculty --</option>
+                                    {% for faculty in faculty %}
+                                    <option value="{{ faculty.faculty_id }}">{{ faculty.name }} ({{ faculty.faculty_id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editDaySelect" class="form-label">Day of Week</label>
+                                <select class="form-select" id="editDaySelect" required>
+                                    <option value="Monday">Monday</option>
+                                    <option value="Tuesday">Tuesday</option>
+                                    <option value="Wednesday">Wednesday</option>
+                                    <option value="Thursday">Thursday</option>
+                                    <option value="Friday">Friday</option>
+                                    <option value="Saturday">Saturday</option>
+                                    <option value="Sunday">Sunday</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editStartTimeInput" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="editStartTimeInput" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editEndTimeInput" class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="editEndTimeInput" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="updateScheduleBtn">Update Schedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteScheduleModal" tabindex="-1" aria-labelledby="deleteScheduleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteScheduleModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this class schedule?</p>
+                    <input type="hidden" id="deleteStudentId">
+                    <input type="hidden" id="deleteCourseId">
+                    <input type="hidden" id="deleteDayOfWeek">
+                    <input type="hidden" id="deleteStartTime">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Schedule</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Load schedule when button is clicked
+        document.getElementById('loadScheduleBtn').addEventListener('click', function() {
+            const studentId = document.getElementById('studentSelect').value;
+            const day = document.getElementById('daySelect').value;
+            
+            if (!studentId) {
+                alert('Please select a student');
+                return;
+            }
+            
+            let url = `/api/student/${studentId}/schedule`;
+            if (day) url += `?day=${day}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    // Process schedule data
+                    const timeSlots = generateTimeSlots(data);
+                    populateScheduleTable(timeSlots, data);
+                    populateScheduleList(data);
+                    
+                    // Show the schedule cards
+                    document.getElementById('scheduleCard').style.display = 'block';
+                    document.getElementById('scheduleListCard').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error loading schedule:', error);
+                    alert('Error loading schedule. Please try again.');
+                });
+        });
+        // Generate time slots for the schedule table
+function generateTimeSlots(scheduleData) {
+const timeSlots = [];
+const timeSet = new Set();
+
+text
+        // Extract all start and end times
+        scheduleData.forEach(item => {
+            timeSet.add(item.start_time);
+            timeSet.add(item.end_time);
+        });
+        
+        // Convert to array and sort
+        const sortedTimes = Array.from(timeSet).sort();
+        
+        // Create time slots
+        for (let i = 0; i < sortedTimes.length; i++) {
+            timeSlots.push(sortedTimes[i]);
+        }
+        
+        return timeSlots;
+    }
+    
+    // Populate the schedule table
+    function populateScheduleTable(timeSlots, scheduleData) {
+        const tableBody = document.getElementById('scheduleTableBody');
+        tableBody.innerHTML = '';
+        
+        if (timeSlots.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No schedule data found</td></tr>';
+            return;
+        }
+        
+        // Create a map of schedule items by day and time
+        const scheduleMap = {
+            'Monday': {},
+            'Tuesday': {},
+            'Wednesday': {},
+            'Thursday': {},
+            'Friday': {},
+            'Saturday': {},
+            'Sunday': {}
+        };
+        
+        scheduleData.forEach(item => {
+            if (!scheduleMap[item.day_of_week][item.start_time]) {
+                scheduleMap[item.day_of_week][item.start_time] = [];
+            }
+            scheduleMap[item.day_of_week][item.start_time].push(item);
+        });
+        
+        // Create rows for each time slot
+        for (let i = 0; i < timeSlots.length - 1; i++) {
+            const startTime = timeSlots[i];
+            const endTime = timeSlots[i + 1];
+            const timeRange = `${formatTime(startTime)} - ${formatTime(endTime)}`;
+            
+            const row = document.createElement('tr');
+            
+            // Add time column
+            const timeCell = document.createElement('td');
+            timeCell.textContent = timeRange;
+            row.appendChild(timeCell);
+            
+            // Add cells for each day
+            const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+            days.forEach(day => {
+                const cell = document.createElement('td');
+                
+                // Find classes that start at this time slot
+                const classes = scheduleMap[day][startTime] || [];
+                
+                if (classes.length > 0) {
+                    classes.forEach(cls => {
+                        const classDiv = document.createElement('div');
+                        classDiv.className = 'p-1 mb-1 bg-primary text-white rounded';
+                        classDiv.innerHTML = `
+                            <strong>${cls.course_id}</strong><br>
+                            ${cls.faculty_name}<br>
+                            ${formatTime(cls.start_time)} - ${formatTime(cls.end_time)}
+                        `;
+                        cell.appendChild(classDiv);
+                    });
+                }
+                
+                row.appendChild(cell);
+            });
+            
+            tableBody.appendChild(row);
+        }
+    }
+    
+    // Populate the schedule list table
+    function populateScheduleList(scheduleData) {
+        const tableBody = document.getElementById('scheduleListTableBody');
+        tableBody.innerHTML = '';
+        
+        if (scheduleData.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No schedule data found</td></tr>';
+            return;
+        }
+        
+        // Sort by day of week and start time
+        const dayOrder = {
+            'Monday': 1,
+            'Tuesday': 2,
+            'Wednesday': 3,
+            'Thursday': 4,
+            'Friday': 5,
+            'Saturday': 6,
+            'Sunday': 7
+        };
+        
+        scheduleData.sort((a, b) => {
+            if (dayOrder[a.day_of_week] !== dayOrder[b.day_of_week]) {
+                return dayOrder[a.day_of_week] - dayOrder[b.day_of_week];
+            }
+            return a.start_time.localeCompare(b.start_time);
+        });
+        
+        // Add rows for each schedule item
+        scheduleData.forEach(item => {
+            const row = `
+                <tr>
+                    <td>${item.day_of_week}</td>
+                    <td>${formatTime(item.start_time)}</td>
+                    <td>${formatTime(item.end_time)}</td>
+                    <td>${item.course_id} - ${item.course_title}</td>
+                    <td>${item.faculty_name}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary edit-schedule" 
+                                data-student-id="${item.student_id}" 
+                                data-course-id="${item.course_id}"
+                                data-day="${item.day_of_week}"
+                                data-start-time="${item.start_time}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger delete-schedule" 
+                                data-student-id="${item.student_id}" 
+                                data-course-id="${item.course_id}"
+                                data-day="${item.day_of_week}"
+                                data-start-time="${item.start_time}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            tableBody.innerHTML += row;
+        });
+        
+        // Add event listeners to edit and delete buttons
+        document.querySelectorAll('.edit-schedule').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const studentId = this.getAttribute('data-student-id');
+                const courseId = this.getAttribute('data-course-id');
+                const day = this.getAttribute('data-day');
+                const startTime = this.getAttribute('data-start-time');
+                openEditScheduleModal(studentId, courseId, day, startTime);
+            });
+        });
+        
+        document.querySelectorAll('.delete-schedule').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const studentId = this.getAttribute('data-student-id');
+                const courseId = this.getAttribute('data-course-id');
+                const day = this.getAttribute('data-day');
+                const startTime = this.getAttribute('data-start-time');
+                openDeleteScheduleModal(studentId, courseId, day, startTime);
+            });
+        });
+    }
+    
+    // Format time for display
+    function formatTime(timeString) {
+        const [hours, minutes] = timeString.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        return `${hour12}:${minutes} ${ampm}`;
+    }
+    
+    // Function to open edit schedule modal
+    function openEditScheduleModal(studentId, courseId, day, startTime) {
+        fetch(`/api/schedule/${studentId}/${courseId}/${day}/${startTime}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('editStudentId').value = data.student_id;
+                document.getElementById('editCourseId').value = data.course_id;
+                document.getElementById('editDayOfWeek').value = data.day_of_week;
+                document.getElementById('editOriginalStartTime').value = data.start_time;
+                document.getElementById('editFacultySelect').value = data.faculty_id;
+                document.getElementById('editDaySelect').value = data.day_of_week;
+                document.getElementById('editStartTimeInput').value = data.start_time;
+                document.getElementById('editEndTimeInput').value = data.end_time;
+                
+                const editModal = new bootstrap.Modal(document.getElementById('editScheduleModal'));
+                editModal.show();
+            })
+            .catch(error => {
+                console.error('Error loading schedule details:', error);
+                alert('Error loading schedule details. Please try again.');
+            });
+    }
+    
+    // Function to open delete schedule modal
+    function openDeleteScheduleModal(studentId, courseId, day, startTime) {
+        document.getElementById('deleteStudentId').value = studentId;
+        document.getElementById('deleteCourseId').value = courseId;
+        document.getElementById('deleteDayOfWeek').value = day;
+        document.getElementById('deleteStartTime').value = startTime;
+        
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteScheduleModal'));
+        deleteModal.show();
+    }
+    
+    // Save new schedule
+    document.getElementById('saveScheduleBtn').addEventListener('click', function() {
+        const studentId = document.getElementById('scheduleStudentSelect').value;
+        const facultyId = document.getElementById('scheduleFacultySelect').value;
+        const courseId = document.getElementById('scheduleCourseSelect').value;
+        const dayOfWeek = document.getElementById('scheduleDaySelect').value;
+        const startTime = document.getElementById('scheduleStartTimeInput').value;
+        const endTime = document.getElementById('scheduleEndTimeInput').value;
+        
+        // Validate form
+        if (!studentId || !facultyId || !courseId || !dayOfWeek || !startTime || !endTime) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Validate time range
+        if (startTime >= endTime) {
+            alert('End time must be after start time');
+            return;
+        }
+        
+        // Create schedule object
+        const scheduleData = {
+            student_id: studentId,
+            faculty_id: facultyId,
+            course_id: courseId,
+            day_of_week: dayOfWeek,
+            start_time: startTime,
+            end_time: endTime
+        };
+        
+        // Send data to server
+        fetch('/api/schedule', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(scheduleData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Schedule added successfully!');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addScheduleModal'));
+                modal.hide();
+                
+                // Reset form
+                document.getElementById('addScheduleForm').reset();
+                
+                // Update student select to match the new schedule
+                document.getElementById('studentSelect').value = studentId;
+                
+                // Reload schedule
+                document.getElementById('loadScheduleBtn').click();
+            } else {
+                alert('Error adding schedule: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error adding schedule:', error);
+            alert('Error adding schedule. Please try again.');
+        });
+    });
+    
+    // Update existing schedule
+    document.getElementById('updateScheduleBtn').addEventListener('click', function() {
+        const studentId = document.getElementById('editStudentId').value;
+        const courseId = document.getElementById('editCourseId').value;
+        const originalDay = document.getElementById('editDayOfWeek').value;
+        const originalStartTime = document.getElementById('editOriginalStartTime').value;
+        
+        const facultyId = document.getElementById('editFacultySelect').value;
+        const dayOfWeek = document.getElementById('editDaySelect').value;
+        const startTime = document.getElementById('editStartTimeInput').value;
+        const endTime = document.getElementById('editEndTimeInput').value;
+        
+        // Validate form
+        if (!facultyId || !dayOfWeek || !startTime || !endTime) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Validate time range
+        if (startTime >= endTime) {
+            alert('End time must be after start time');
+            return;
+        }
+        
+        // Create update object
+        const updateData = {
+            faculty_id: facultyId,
+            day_of_week: dayOfWeek,
+            start_time: startTime,
+            end_time: endTime
+        };
+        
+        // Send data to server
+        fetch(`/api/schedule/${studentId}/${courseId}/${originalDay}/${originalStartTime}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Schedule updated successfully!');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editScheduleModal'));
+                modal.hide();
+                
+                // Reload schedule
+                document.getElementById('loadScheduleBtn').click();
+            } else {
+                alert('Error updating schedule: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error updating schedule:', error);
+            alert('Error updating schedule. Please try again.');
+        });
+    });
+    
+    // Delete schedule
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const studentId = document.getElementById('deleteStudentId').value;
+        const courseId = document.getElementById('deleteCourseId').value;
+        const dayOfWeek = document.getElementById('deleteDayOfWeek').value;
+        const startTime = document.getElementById('deleteStartTime').value;
+        
+        fetch(`/api/schedule/${studentId}/${courseId}/${dayOfWeek}/${startTime}`, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Schedule deleted successfully!');
+                
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteScheduleModal'));
+                modal.hide();
+                
+                // Reload schedule
+                document.getElementById('loadScheduleBtn').click();
+            } else {
+                alert('Error deleting schedule: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting schedule:', error);
+            alert('Error deleting schedule. Please try again.');
+        });
+    });
+    
+    // Pre-select student if coming from student management page
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('student_id');
+        
+        if (studentId) {
+            document.getElementById('studentSelect').value = studentId;
+            document.getElementById('loadScheduleBtn').click();
+        }
+    });
+    
+    // Filter student dropdown with search box
+    document.getElementById('studentSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const studentSelect = document.getElementById('studentSelect');
+        const options = studentSelect.options;
+        
+        for (let i = 0; i < options.length; i++) {
+            const optionText = options[i].text.toLowerCase();
+            if (optionText.includes(searchTerm) || i === 0) { // Always show the placeholder option
+                options[i].style.display = '';
+            } else {
+                options[i].style.display = 'none';
+            }
+        }
+    });
+</script>
+</body>
+</html>
+        

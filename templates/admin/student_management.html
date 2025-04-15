@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management - University Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_home') }}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{{ url_for('admin_students') }}">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_faculty') }}">Faculty</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_courses') }}">Courses</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_departments') }}">Departments</a></li>
+                </ul>
+            </div>
+            <form class="d-flex me-2">
+                <input class="form-control me-2" type="search" placeholder="Search Students" aria-label="Search" id="studentSearchNav">
+            </form>
+            <div class="d-flex">
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('admin_students') }}">
+                                <i class="fas fa-users"></i> All Students
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_academic') }}">
+                                <i class="fas fa-graduation-cap"></i> Academic Records
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_attendance') }}">
+                                <i class="fas fa-clipboard-check"></i> Attendance
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_hostel') }}">
+                                <i class="fas fa-building"></i> Hostel Data
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_mess') }}">
+                                <i class="fas fa-utensils"></i> Mess Subscriptions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_achievements') }}">
+                                <i class="fas fa-trophy"></i> Achievements
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_clubs') }}">
+                                <i class="fas fa-users-cog"></i> Clubs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_applications') }}">
+                                <i class="fas fa-file-alt"></i> Applications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_schedule') }}">
+                                <i class="fas fa-calendar-alt"></i> Weekly Schedule
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Student Management</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                            <i class="fas fa-user-plus"></i> Add New Student
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter and Search -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Filter Students</h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="departmentFilter" class="form-label">Department</label>
+                                <select class="form-select" id="departmentFilter">
+                                    <option value="">All Departments</option>
+                                    {% for department in departments %}
+                                    <option value="{{ department.dept_name }}">{{ department.dept_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="studentSearch" class="form-label">Search</label>
+                                <input type="text" class="form-control" id="studentSearch" placeholder="Search by name, ID, email...">
+                            </div>
+                            <div class="col-md-4 mb-3 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" id="applyFilterBtn">
+                                    <i class="fas fa-filter"></i> Apply Filter
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Table -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Students List</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Student ID</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                        <th>Department</th>
+                                        <th>Credits</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTableBody">
+                                    {% for student in students %}
+                                    <tr>
+                                        <td>{{ student.student_id }}</td>
+                                        <td>{{ student.name }}</td>
+                                        <td>{{ student.email_id }}</td>
+                                        <td>{{ student.phone_no }}</td>
+                                        <td>{{ student.dept_name }}</td>
+                                        <td>{{ student.total_credits }}</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-info view-student" data-student-id="{{ student.student_id }}">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-primary edit-student" data-student-id="{{ student.student_id }}">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-danger delete-student" data-student-id="{{ student.student_id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    <i class="fas fa-cog"></i>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li><a class="dropdown-item" href="{{ url_for('admin_student_academic') }}?student_id={{ student.student_id }}">Academic Records</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('admin_student_attendance') }}?student_id={{ student.student_id }}">Attendance</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('admin_student_hostel') }}?student_id={{ student.student_id }}">Hostel Data</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('admin_student_mess') }}?student_id={{ student.student_id }}">Mess Subscription</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('admin_student_achievements') }}?student_id={{ student.student_id }}">Achievements</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('admin_student_clubs') }}?student_id={{ student.student_id }}">Clubs</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('admin_student_applications') }}?student_id={{ student.student_id }}">Applications</a></li>
+                                                    <li><a class="dropdown-item" href="{{ url_for('admin_student_schedule') }}?student_id={{ student.student_id }}">Weekly Schedule</a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item {% if current_page == 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="?page={{ current_page - 1 }}" tabindex="-1" {% if current_page == 1 %}aria-disabled="true"{% endif %}>Previous</a>
+                                </li>
+                                {% for page in range(1, total_pages + 1) %}
+                                <li class="page-item {% if page == current_page %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ page }}">{{ page }}</a>
+                                </li>
+                                {% endfor %}
+                                <li class="page-item {% if current_page == total_pages %}disabled{% endif %}">
+                                    <a class="page-link" href="?page={{ current_page + 1 }}">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addStudentModalLabel">Add New Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addStudentForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="studentId" class="form-label">Student ID</label>
+                                <input type="text" class="form-control" id="studentId" maxlength="5" required>
+                                <div class="form-text">5 characters maximum</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="studentName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="studentName" maxlength="50" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="studentEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="studentEmail" maxlength="50" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="studentPhone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="studentPhone" maxlength="15" required>
+                                <div class="form-text">10 digits required</div>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="studentUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="studentUsername" maxlength="20" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="studentPassword" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="studentPassword" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="studentDepartment" class="form-label">Department</label>
+                                <select class="form-select" id="studentDepartment" required>
+                                    <option value="">-- Select Department --</option>
+                                    {% for department in departments %}
+                                    <option value="{{ department.dept_name }}">{{ department.dept_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="studentCredits" class="form-label">Total Credits</label>
+                                <input type="number" class="form-control" id="studentCredits" min="0" value="0" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveStudentBtn">Save Student</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1" aria-labelledby="editStudentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editStudentModalLabel">Edit Student</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editStudentForm">
+                        <input type="hidden" id="editStudentId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editStudentName" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="editStudentName" maxlength="50" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editStudentEmail" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="editStudentEmail" maxlength="50" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editStudentPhone" class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="editStudentPhone" maxlength="15" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editStudentUsername" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="editStudentUsername" maxlength="20" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editStudentDepartment" class="form-label">Department</label>
+                                <select class="form-select" id="editStudentDepartment" required>
+                                    <option value="">-- Select Department --</option>
+                                    {% for department in departments %}
+                                    <option value="{{ department.dept_name }}">{{ department.dept_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editStudentCredits" class="form-label">Total Credits</label>
+                                <input type="number" class="form-control" id="editStudentCredits" min="0" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStudentPassword" class="form-label">New Password (leave blank to keep current)</label>
+                            <input type="password" class="form-control" id="editStudentPassword">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <div class="modal-footer"> <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button> <button type="button" class="btn btn-primary" id="updateStudentBtn">Update Student</button> </div> </div> </div> </div>
+                    text
+                    <!-- View Student Modal -->
+                    <div class="modal fade" id="viewStudentModal" tabindex="-1" aria-labelledby="viewStudentModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="viewStudentModalLabel">Student Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-md-4 text-center mb-3">
+                                            <img src="{{ url_for('static', filename='images/default-profile.png') }}" alt="Student Profile" class="img-fluid rounded-circle" style="width: 150px; height: 150px;">
+                                        </div>
+                                        <div class="col-md-8">
+                                            <h4 id="viewStudentName">Student Name</h4>
+                                            <p id="viewStudentId">Student ID: </p>
+                                            <p id="viewStudentDepartment">Department: </p>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <h5>Contact Information</h5>
+                                            <p id="viewStudentEmail">Email: </p>
+                                            <p id="viewStudentPhone">Phone: </p>
+                                            <p id="viewStudentUsername">Username: </p>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h5>Academic Information</h5>
+                                            <p id="viewStudentCredits">Total Credits: </p>
+                                            <p id="viewStudentCGPA">CGPA: </p>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <h5>Quick Links</h5>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <a href="#" id="viewAcademicLink" class="btn btn-outline-primary btn-sm">Academic Records</a>
+                                                <a href="#" id="viewAttendanceLink" class="btn btn-outline-primary btn-sm">Attendance</a>
+                                                <a href="#" id="viewHostelLink" class="btn btn-outline-primary btn-sm">Hostel Data</a>
+                                                <a href="#" id="viewMessLink" class="btn btn-outline-primary btn-sm">Mess Subscription</a>
+                                                <a href="#" id="viewAchievementsLink" class="btn btn-outline-primary btn-sm">Achievements</a>
+                                                <a href="#" id="viewClubsLink" class="btn btn-outline-primary btn-sm">Clubs</a>
+                                                <a href="#" id="viewApplicationsLink" class="btn btn-outline-primary btn-sm">Applications</a>
+                                                <a href="#" id="viewScheduleLink" class="btn btn-outline-primary btn-sm">Weekly Schedule</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary edit-from-view">Edit Student</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Delete Confirmation Modal -->
+                    <div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteStudentModalLabel">Confirm Deletion</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to delete this student? This action cannot be undone and will remove all associated data including academic records, hostel assignments, and other information.</p>
+                                    <p class="text-danger fw-bold">Student ID: <span id="deleteStudentId"></span></p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Student</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+                    <script>
+                        // Apply filters when button is clicked
+                        document.getElementById('applyFilterBtn').addEventListener('click', function() {
+                            const department = document.getElementById('departmentFilter').value;
+                            const searchTerm = document.getElementById('studentSearch').value;
+                            
+                            // Construct URL with query parameters
+                            let url = '{{ url_for("admin_students") }}?';
+                            if (department) url += `department=${encodeURIComponent(department)}&`;
+                            if (searchTerm) url += `search=${encodeURIComponent(searchTerm)}&`;
+                            
+                            // Redirect to the filtered URL
+                            window.location.href = url;
+                        });
+                        
+                        // View student details
+                        document.querySelectorAll('.view-student').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const studentId = this.getAttribute('data-student-id');
+                                
+                                fetch(`/admin/students/${studentId}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        // Populate the view modal with student data
+                                        document.getElementById('viewStudentName').textContent = data.name;
+                                        document.getElementById('viewStudentId').textContent = `Student ID: ${data.student_id}`;
+                                        document.getElementById('viewStudentDepartment').textContent = `Department: ${data.dept_name || 'Not Assigned'}`;
+                                        document.getElementById('viewStudentEmail').textContent = `Email: ${data.email_id}`;
+                                        document.getElementById('viewStudentPhone').textContent = `Phone: ${data.phone_no}`;
+                                        document.getElementById('viewStudentUsername').textContent = `Username: ${data.username}`;
+                                        document.getElementById('viewStudentCredits').textContent = `Total Credits: ${data.total_credits}`;
+                                        document.getElementById('viewStudentCGPA').textContent = `CGPA: ${data.cgpa || 'N/A'}`;
+                                        
+                                        // Update quick links
+                                        document.getElementById('viewAcademicLink').href = `{{ url_for('admin_student_academic') }}?student_id=${data.student_id}`;
+                                        document.getElementById('viewAttendanceLink').href = `{{ url_for('admin_student_attendance') }}?student_id=${data.student_id}`;
+                                        document.getElementById('viewHostelLink').href = `{{ url_for('admin_student_hostel') }}?student_id=${data.student_id}`;
+                                        document.getElementById('viewMessLink').href = `{{ url_for('admin_student_mess') }}?student_id=${data.student_id}`;
+                                        document.getElementById('viewAchievementsLink').href = `{{ url_for('admin_student_achievements') }}?student_id=${data.student_id}`;
+                                        document.getElementById('viewClubsLink').href = `{{ url_for('admin_student_clubs') }}?student_id=${data.student_id}`;
+                                        document.getElementById('viewApplicationsLink').href = `{{ url_for('admin_student_applications') }}?student_id=${data.student_id}`;
+                                        document.getElementById('viewScheduleLink').href = `{{ url_for('admin_student_schedule') }}?student_id=${data.student_id}`;
+                                        
+                                        // Store student ID for edit button
+                                        document.querySelector('.edit-from-view').setAttribute('data-student-id', data.student_id);
+                                        
+                                        // Show the modal
+                                        const viewModal = new bootstrap.Modal(document.getElementById('viewStudentModal'));
+                                        viewModal.show();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching student details:', error);
+                                        alert('Error loading student details. Please try again.');
+                                    });
+                            });
+                        });
+                        
+                        // Edit from view modal
+                        document.querySelector('.edit-from-view').addEventListener('click', function() {
+                            const studentId = this.getAttribute('data-student-id');
+                            
+                            // Close view modal
+                            const viewModal = bootstrap.Modal.getInstance(document.getElementById('viewStudentModal'));
+                            viewModal.hide();
+                            
+                            // Find and click the edit button for this student
+                            document.querySelector(`.edit-student[data-student-id="${studentId}"]`).click();
+                        });
+                        
+                        // Edit student
+                        document.querySelectorAll('.edit-student').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const studentId = this.getAttribute('data-student-id');
+                                
+                                fetch(`/admin/students/${studentId}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        // Populate the edit form with student data
+                                        document.getElementById('editStudentId').value = data.student_id;
+                                        document.getElementById('editStudentName').value = data.name;
+                                        document.getElementById('editStudentEmail').value = data.email_id;
+                                        document.getElementById('editStudentPhone').value = data.phone_no;
+                                        document.getElementById('editStudentUsername').value = data.username;
+                                        document.getElementById('editStudentDepartment').value = data.dept_name || '';
+                                        document.getElementById('editStudentCredits').value = data.total_credits;
+                                        
+                                        // Clear password field (it's optional for updates)
+                                        document.getElementById('editStudentPassword').value = '';
+                                        
+                                        // Show the modal
+                                        const editModal = new bootstrap.Modal(document.getElementById('editStudentModal'));
+                                        editModal.show();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching student details:', error);
+                                        alert('Error loading student details. Please try again.');
+                                    });
+                            });
+                        });
+                        
+                        // Delete student
+                        document.querySelectorAll('.delete-student').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const studentId = this.getAttribute('data-student-id');
+                                document.getElementById('deleteStudentId').textContent = studentId;
+                                
+                                const deleteModal = new bootstrap.Modal(document.getElementById('deleteStudentModal'));
+                                deleteModal.show();
+                            });
+                        });
+                        
+                        // Save new student
+                        document.getElementById('saveStudentBtn').addEventListener('click', function() {
+                            // Get form values
+                            const studentId = document.getElementById('studentId').value;
+                            const name = document.getElementById('studentName').value;
+                            const email = document.getElementById('studentEmail').value;
+                            const phone = document.getElementById('studentPhone').value;
+                            const username = document.getElementById('studentUsername').value;
+                            const password = document.getElementById('studentPassword').value;
+                            const department = document.getElementById('studentDepartment').value;
+                            const credits = document.getElementById('studentCredits').value;
+                            
+                            // Validate form
+                            if (!studentId || !name || !email || !phone || !username || !password) {
+                                alert('Please fill in all required fields');
+                                return;
+                            }
+                            
+                            // Validate student ID format (5 characters)
+                            if (studentId.length !== 5) {
+                                alert('Student ID must be exactly 5 characters');
+                                return;
+                            }
+                            
+                            // Validate phone number (10 digits)
+                            if (!/^\d{10}$/.test(phone)) {
+                                alert('Phone number must be exactly 10 digits');
+                                return;
+                            }
+                            
+                            // Create student object
+                            const studentData = {
+                                student_id: studentId,
+                                name: name,
+                                email_id: email,
+                                phone_no: phone,
+                                username: username,
+                                password: password,
+                                dept_name: department,
+                                total_credits: parseInt(credits),
+                                role: 'Student'
+                            };
+                            
+                            // Send data to server
+                            fetch('/admin/students', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(studentData),
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Student added successfully!');
+                                    
+                                    // Close modal
+                                    const modal = bootstrap.Modal.getInstance(document.getElementById('addStudentModal'));
+                                    modal.hide();
+                                    
+                                    // Reset form
+                                    document.getElementById('addStudentForm').reset();
+                                    
+                                    // Reload page to show new student
+                                    location.reload();
+                                } else {
+                                    alert('Error adding student: ' + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error adding student:', error);
+                                alert('Error adding student. Please try again.');
+                            });
+                        });
+                        
+                        // Update existing student
+                        document.getElementById('updateStudentBtn').addEventListener('click', function() {
+                            // Get form values
+                            const studentId = document.getElementById('editStudentId').value;
+                            const name = document.getElementById('editStudentName').value;
+                            const email = document.getElementById('editStudentEmail').value;
+                            const phone = document.getElementById('editStudentPhone').value;
+                            const username = document.getElementById('editStudentUsername').value;
+                            const password = document.getElementById('editStudentPassword').value;
+                            const department = document.getElementById('editStudentDepartment').value;
+                            const credits = document.getElementById('editStudentCredits').value;
+                            
+                            // Validate form
+                            if (!name || !email || !phone || !username) {
+                                alert('Please fill in all required fields');
+                                return;
+                            }
+                            
+                            // Validate phone number (10 digits)
+                            if (!/^\d{10}$/.test(phone)) {
+                                alert('Phone number must be exactly 10 digits');
+                                return;
+                            }
+                            
+                            // Create update object
+                            const updateData = {
+                                name: name,
+                                email_id: email,
+                                phone_no: phone,
+                                username: username,
+                                dept_name: department,
+                                total_credits: parseInt(credits)
+                            };
+                            
+                            // Add password only if provided
+                            if (password) {
+                                updateData.password = password;
+                            }
+                            
+                            // Send data to server
+                            fetch(`/admin/students/${studentId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(updateData),
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Student updated successfully!');
+                                    
+                                    // Close modal
+                                    const modal = bootstrap.Modal.getInstance(document.getElementById('editStudentModal'));
+                                    modal.hide();
+                                    
+                                    // Reload page to show updated student
+                                    location.reload();
+                                } else {
+                                    alert('Error updating student: ' + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error updating student:', error);
+                                alert('Error updating student. Please try again.');
+                            });
+                        });
+                        
+                        // Confirm delete student
+                        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                            const studentId = document.getElementById('deleteStudentId').textContent;
+                            
+                            fetch(`/admin/students/${studentId}`, {
+                                method: 'DELETE',
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    alert('Student deleted successfully!');
+                                    
+                                    // Close modal
+                                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteStudentModal'));
+                                    modal.hide();
+                                    
+                                    // Reload page to update student list
+                                    location.reload();
+                                } else {
+                                    alert('Error deleting student: ' + data.message);
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error deleting student:', error);
+                                alert('Error deleting student. Please try again.');
+                            });
+                        });
+                        
+                        // Sync search boxes
+                        document.getElementById('studentSearchNav').addEventListener('input', function() {
+                            document.getElementById('studentSearch').value = this.value;
+                        });
+                        
+                        document.getElementById('studentSearch').addEventListener('input', function() {
+                            document.getElementById('studentSearchNav').value = this.value;
+                        });
+                        
+                        // Handle enter key in search boxes
+                        document.getElementById('studentSearchNav').addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                document.getElementById('applyFilterBtn').click();
+                            }
+                        });
+                        
+                        document.getElementById('studentSearch').addEventListener('keypress', function(e) {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                document.getElementById('applyFilterBtn').click();
+                            }
+                        });
+                        
+</script>
+</body>
+</html>

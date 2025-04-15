@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Records Management - University Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_students') }}">Students</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_faculty') }}">Faculty</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_courses') }}">Courses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_departments') }}">Departments</a>
+                    </li>
+                </ul>
+            </div>
+            <form class="d-flex me-2">
+                <input class="form-control me-2" type="search" placeholder="Search Students" aria-label="Search" id="studentSearch">
+            </form>
+            <div class="d-flex">
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_students') }}">
+                                <i class="fas fa-users sidebar-icon"></i>
+                                All Students
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('admin_student_academic') }}">
+                                <i class="fas fa-graduation-cap sidebar-icon"></i>
+                                Academic Records
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_attendance') }}">
+                                <i class="fas fa-clipboard-check sidebar-icon"></i>
+                                Attendance
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_hostel') }}">
+                                <i class="fas fa-building sidebar-icon"></i>
+                                Hostel Data
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_mess') }}">
+                                <i class="fas fa-utensils sidebar-icon"></i>
+                                Mess Subscriptions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_achievements') }}">
+                                <i class="fas fa-trophy sidebar-icon"></i>
+                                Achievements
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_clubs') }}">
+                                <i class="fas fa-users-cog sidebar-icon"></i>
+                                Clubs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_applications') }}">
+                                <i class="fas fa-file-alt sidebar-icon"></i>
+                                Applications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_schedule') }}">
+                                <i class="fas fa-calendar-alt sidebar-icon"></i>
+                                Weekly Schedule
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Academic Records Management</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addRecordModal">
+                            <i class="fas fa-plus"></i> Add New Record
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Student Selection -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Select Student</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <select class="form-select" id="studentSelect">
+                                    <option value="">-- Select Student --</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.student_id }}">{{ student.name }} ({{ student.student_id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <button class="btn btn-primary" id="loadStudentRecords">
+                                    <i class="fas fa-search"></i> Load Records
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Academic Records Table -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Academic Records</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Course ID</th>
+                                        <th>Course Title</th>
+                                        <th>Semester</th>
+                                        <th>Year</th>
+                                        <th>Attendance (%)</th>
+                                        <th>Internal Marks</th>
+                                        <th>Final Marks</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="academicRecordsBody">
+                                    <!-- Records will be loaded dynamically -->
+                                    <tr>
+                                        <td colspan="9" class="text-center">Select a student to view records</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Add Record Modal -->
+    <div class="modal fade" id="addRecordModal" tabindex="-1" aria-labelledby="addRecordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addRecordModalLabel">Add Academic Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addRecordForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="modalStudentSelect" class="form-label">Student</label>
+                                <select class="form-select" id="modalStudentSelect" required>
+                                    <option value="">-- Select Student --</option>
+                                    {% for student in students %}
+                                    <option value="{{ student.student_id }}">{{ student.name }} ({{ student.student_id }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="courseSelect" class="form-label">Course</label>
+                                <select class="form-select" id="courseSelect" required>
+                                    <option value="">-- Select Course --</option>
+                                    {% for course in courses %}
+                                    <option value="{{ course.course_id }}">{{ course.course_id }} - {{ course.title }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="semesterSelect" class="form-label">Semester</label>
+                                <select class="form-select" id="semesterSelect" required>
+                                    <option value="">-- Select Semester --</option>
+                                    <option value="Fall">Fall</option>
+                                    <option value="Spring">Spring</option>
+                                    <option value="Summer">Summer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="yearInput" class="form-label">Year</label>
+                                <input type="number" class="form-control" id="yearInput" min="2020" max="2030" value="2025" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="attendanceInput" class="form-label">Attendance (%)</label>
+                                <input type="number" class="form-control" id="attendanceInput" min="0" max="100" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="internalMarksInput" class="form-label">Internal Marks</label>
+                                <input type="number" class="form-control" id="internalMarksInput" min="0" max="50" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="finalMarksInput" class="form-label">Final Marks</label>
+                                <input type="number" class="form-control" id="finalMarksInput" min="0" max="50" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveRecordBtn">Save Record</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Record Modal -->
+    <div class="modal fade" id="editRecordModal" tabindex="-1" aria-labelledby="editRecordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editRecordModalLabel">Edit Academic Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editRecordForm">
+                        <input type="hidden" id="editRecordId">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editStudentId" class="form-label">Student ID</label>
+                                <input type="text" class="form-control" id="editStudentId" readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editCourseId" class="form-label">Course ID</label>
+                                <input type="text" class="form-control" id="editCourseId" readonly>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editSemester" class="form-label">Semester</label>
+                                <select class="form-select" id="editSemester" required>
+                                    <option value="Fall">Fall</option>
+                                    <option value="Spring">Spring</option>
+                                    <option value="Summer">Summer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="editYear" class="form-label">Year</label>
+                                <input type="number" class="form-control" id="editYear" min="2020" max="2030" required>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="editAttendance" class="form-label">Attendance (%)</label>
+                                <input type="number" class="form-control" id="editAttendance" min="0" max="100" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="editInternalMarks" class="form-label">Internal Marks</label>
+                                <input type="number" class="form-control" id="editInternalMarks" min="0" max="50" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="editFinalMarks" class="form-label">Final Marks</label>
+                                <input type="number" class="form-control" id="editFinalMarks" min="0" max="50" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="updateRecordBtn">Update Record</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteRecordModal" tabindex="-1" aria-labelledby="deleteRecordModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteRecordModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this academic record? This action cannot be undone.</p>
+                    <input type="hidden" id="deleteRecordId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Record</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        // Load student records when button is clicked
+        document.getElementById('loadStudentRecords').addEventListener('click', function() {
+            const studentId = document.getElementById('studentSelect').value;
+            if (!studentId) {
+                alert('Please select a student');
+                return;
+            }
+            
+            fetch(`/api/student/${studentId}/academic_records`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('academicRecordsBody');
+                    tableBody.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        tableBody.innerHTML = '<tr><td colspan="9" class="text-center">No records found for this student</td></tr>';
+                        return;
+                    }
+                    
+                    data.forEach(record => {
+                        const total = record.internal_marks + record.final_marks;
+                        const row = `
+                            <tr>
+                                <td>${record.course_id}</td>
+                                <td>${record.course_title}</td>
+                                <td>${record.semester}</td>
+                                <td>${record.year}</td>
+                                <td>${record.attendance_percent}%</td>
+                                <td>${record.internal_marks}</td>
+                                <td>${record.final_marks}</td>
+                                <td>${total}/100</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary edit-record" data-record-id="${record.record_id}">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger delete-record" data-record-id="${record.record_id}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+                    
+                    // Add event listeners to edit and delete buttons
+                    document.querySelectorAll('.edit-record').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const recordId = this.getAttribute('data-record-id');
+                            openEditModal(recordId);
+                        });
+                    });
+                    
+                    document.querySelectorAll('.delete-record').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const recordId = this.getAttribute('data-record-id');
+                            openDeleteModal(recordId);
+                        });
+                    });
+                })
+                .catch(error => {console.error('Error loading student records:', error);
+                alert('Error loading student records. Please try again.');
+                });
+                });
+
+    // Function to open edit modal and populate with record data
+    function openEditModal(recordId) {
+        fetch(`/api/academic_record/${recordId}`)
+            .then(response => response.json())
+            .then(record => {
+                document.getElementById('editRecordId').value = record.record_id;
+                document.getElementById('editStudentId').value = record.student_id;
+                document.getElementById('editCourseId').value = record.course_id;
+                document.getElementById('editSemester').value = record.semester;
+                document.getElementById('editYear').value = record.year;
+                document.getElementById('editAttendance').value = record.attendance_percent;
+                document.getElementById('editInternalMarks').value = record.internal_marks;
+                document.getElementById('editFinalMarks').value = record.final_marks;
+                
+                // Show the modal
+                const editModal = new bootstrap.Modal(document.getElementById('editRecordModal'));
+                editModal.show();
+            })
+            .catch(error => {
+                console.error('Error loading record details:', error);
+                alert('Error loading record details. Please try again.');
+            });
+    }
+
+    // Function to open delete confirmation modal
+    function openDeleteModal(recordId) {
+        document.getElementById('deleteRecordId').value = recordId;
+        const deleteModal = new bootstrap.Modal(document.getElementById('deleteRecordModal'));
+        deleteModal.show();
+    }
+
+    // Save new record
+    document.getElementById('saveRecordBtn').addEventListener('click', function() {
+        const studentId = document.getElementById('modalStudentSelect').value;
+        const courseId = document.getElementById('courseSelect').value;
+        const semester = document.getElementById('semesterSelect').value;
+        const year = document.getElementById('yearInput').value;
+        const attendance = document.getElementById('attendanceInput').value;
+        const internalMarks = document.getElementById('internalMarksInput').value;
+        const finalMarks = document.getElementById('finalMarksInput').value;
+        
+        // Validate form
+        if (!studentId || !courseId || !semester || !year || !attendance || !internalMarks || !finalMarks) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Create record object
+        const recordData = {
+            student_id: studentId,
+            course_id: courseId,
+            semester: semester,
+            year: parseInt(year),
+            attendance_percent: parseInt(attendance),
+            internal_marks: parseInt(internalMarks),
+            final_marks: parseInt(finalMarks)
+        };
+        
+        // Send data to server
+        fetch('/api/academic_record', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(recordData),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addRecordModal'));
+            modal.hide();
+            
+            // Reset form
+            document.getElementById('addRecordForm').reset();
+            
+            // Reload records if the same student is selected
+            const currentStudentId = document.getElementById('studentSelect').value;
+            if (currentStudentId === studentId) {
+                document.getElementById('loadStudentRecords').click();
+            }
+            
+            alert('Record added successfully!');
+        })
+        .catch(error => {
+            console.error('Error adding record:', error);
+            alert('Error adding record. Please try again.');
+        });
+    });
+
+    // Update existing record
+    document.getElementById('updateRecordBtn').addEventListener('click', function() {
+        const recordId = document.getElementById('editRecordId').value;
+        const semester = document.getElementById('editSemester').value;
+        const year = document.getElementById('editYear').value;
+        const attendance = document.getElementById('editAttendance').value;
+        const internalMarks = document.getElementById('editInternalMarks').value;
+        const finalMarks = document.getElementById('editFinalMarks').value;
+        
+        // Validate form
+        if (!semester || !year || !attendance || !internalMarks || !finalMarks) {
+            alert('Please fill in all required fields');
+            return;
+        }
+        
+        // Create update object
+        const updateData = {
+            semester: semester,
+            year: parseInt(year),
+            attendance_percent: parseInt(attendance),
+            internal_marks: parseInt(internalMarks),
+            final_marks: parseInt(finalMarks)
+        };
+        
+        // Send data to server
+        fetch(`/api/academic_record/${recordId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updateData),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editRecordModal'));
+            modal.hide();
+            
+            // Reload current student's records
+            document.getElementById('loadStudentRecords').click();
+            
+            alert('Record updated successfully!');
+        })
+        .catch(error => {
+            console.error('Error updating record:', error);
+            alert('Error updating record. Please try again.');
+        });
+    });
+
+    // Delete record
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        const recordId = document.getElementById('deleteRecordId').value;
+        
+        fetch(`/api/academic_record/${recordId}`, {
+            method: 'DELETE',
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteRecordModal'));
+            modal.hide();
+            
+            // Reload current student's records
+            document.getElementById('loadStudentRecords').click();
+            
+            alert('Record deleted successfully!');
+        })
+        .catch(error => {
+            console.error('Error deleting record:', error);
+            alert('Error deleting record. Please try again.');
+        });
+    });
+
+    // Pre-select student if coming from student management page
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('student_id');
+        
+        if (studentId) {
+            document.getElementById('studentSelect').value = studentId;
+            document.getElementById('loadStudentRecords').click();
+        }
+    });
+
+    // Filter student dropdown with search box
+    document.getElementById('studentSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const studentSelect = document.getElementById('studentSelect');
+        const options = studentSelect.options;
+        
+        for (let i = 0; i < options.length; i++) {
+            const optionText = options[i].text.toLowerCase();
+            if (optionText.includes(searchTerm) || i === 0) { // Always show the placeholder option
+                options[i].style.display = '';
+            } else {
+                options[i].style.display = 'none';
+            }
+        }
+    });
+</script>
+</body>
+</html>

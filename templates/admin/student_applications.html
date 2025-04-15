@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Applications - University Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin_home') }}">Admin Dashboard</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_home') }}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_students') }}">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_faculty') }}">Faculty</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_courses') }}">Courses</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('admin_departments') }}">Departments</a></li>
+                </ul>
+            </div>
+            <div class="d-flex">
+                <a href="{{ url_for('logout') }}" class="btn btn-outline-light">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav id="sidebar" class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_students') }}">
+                                <i class="fas fa-users"></i> All Students
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_academic') }}">
+                                <i class="fas fa-graduation-cap"></i> Academic Records
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_attendance') }}">
+                                <i class="fas fa-clipboard-check"></i> Attendance
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_hostel') }}">
+                                <i class="fas fa-building"></i> Hostel Data
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_mess') }}">
+                                <i class="fas fa-utensils"></i> Mess Subscriptions
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_achievements') }}">
+                                <i class="fas fa-trophy"></i> Achievements
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_clubs') }}">
+                                <i class="fas fa-users-cog"></i> Clubs
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="{{ url_for('admin_student_applications') }}">
+                                <i class="fas fa-file-alt"></i> Applications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_student_schedule') }}">
+                                <i class="fas fa-calendar-alt"></i> Weekly Schedule
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Main content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">Student Applications</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Applications Table -->
+                <div class="table-responsive">
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Application ID</th>
+                                <th>Student Name</th>
+                                <th>Application Type</th>
+                                <th>Status</th>
+                                <th>Submission Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for application in applications %}
+                            <tr>
+                                <td>{{ application.app_id }}</td>
+                                <td>{{ application.student.name }}</td>
+                                <td>{{ application.app_type }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'warning' if application.app_status == 'Pending' else 'success' if application.app_status == 'Approved' else 'danger' }}">
+                                        {{ application.app_status }}
+                                    </span>
+                                </td>
+                                <td>{{ application.submission_date.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="viewApplication('{{ application.app_id }}')">View</button>
+                                    <button class="btn btn-sm btn-success" onclick="approveApplication('{{ application.app_id }}')">Approve</button>
+                                    <button class="btn btn-sm btn-danger" onclick="rejectApplication('{{ application.app_id }}')">Reject</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </main>
+        </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="filterModalLabel">Filter Applications</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filterForm">
+                        <div class="mb-3">
+                            <label for="applicationStatus" class="form-label">Application Status</label>
+                            <select class="form-select" id="applicationStatus">
+                                <option value="">All</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="applicationType" class="form-label">Application Type</label>
+                            <select class="form-select" id="applicationType">
+                                <option value="">All</option>
+                                <option value="Leave">Leave</option>
+                                <option value="Scholarship">Scholarship</option>
+                                <option value="Hostel">Hostel</option>
+                                <!-- Add more application types as needed -->
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dateRange" class="form-label">Date Range</label>
+                            <input type="date" class="form-control" id="startDate">
+                            <input type="date" class="form-control mt-2" id="endDate">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="applyFilter()">Apply Filter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        function viewApplication(appId) {
+            // Implement view application logic
+            console.log("Viewing application:", appId);
+        }
+
+        function approveApplication(appId) {
+            // Implement approve application logic
+            console.log("Approving application:", appId);
+        }
+
+        function rejectApplication(appId) {
+            // Implement reject application logic
+            console.log("Rejecting application:", appId);
+        }
+
+        function applyFilter() {
+            // Implement filter logic
+            console.log("Applying filter");
+            $('#filterModal').modal('hide');
+        }
+    </script>
+</body>
+</html>
