@@ -1145,6 +1145,9 @@ def student_mess():
         flash("An error occurred while retrieving mess data. Please try again later.", "error")
         # Return to dashboard
         return redirect(url_for('student_home'))
+    
+
+
 
 @app.route('/student/achievements')
 def student_achievements():

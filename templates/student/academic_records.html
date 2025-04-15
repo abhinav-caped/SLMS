@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Academic Records{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2><i class="fas fa-graduation-cap"></i> Academic Records</h2>
+    </div>
+    <div class="col-md-4">
+        <form method="GET" action="{{ url_for('student_academic_records') }}" class="d-flex">
+            <select class="form-select me-2" name="semester" onchange="this.form.submit()">
+                <option value="">All Semesters</option>
+                {% for semester in semesters %}
+                <option value="{{ semester }}" {% if semester == current_semester %}selected{% endif %}>{{ semester }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+    </div>
+</div>
+
+<!-- Academic Summary Card -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">Academic Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center">
+                <div class="display-4 fw-bold text-primary">{{ cgpa }}</div>
+                <div class="text-muted">Cumulative GPA</div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="display-4 fw-bold text-primary">{{ total_credits }}</div>
+                <div class="text-muted">Total Credits</div>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="display-4 fw-bold text-primary">{{ courses_completed }}</div>
+                <div class="text-muted">Courses Completed</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Semester GPAs -->
+{% if semester_gpas %}
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="card-title mb-0">Semester GPAs</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for semester, gpa in semester_gpas.items() %}
+            <div class="col-md-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ semester }}</h5>
+                        <p class="display-5 fw-bold {% if gpa >= 8.5 %}text-success{% elif gpa >= 6.0 %}text-warning{% else %}text-danger{% endif %}">
+                            {{ gpa }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Academic Records Table -->
+<div class="card">
+    <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">Course Records</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Course ID</th>
+                        <th>Course Title</th>
+                        <th>Semester</th>
+                        <th>Year</th>
+                        <th>Credits</th>
+                        <th>Internal Marks</th>
+                        <th>Final Marks</th>
+                        <th>Total</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record, title, credits in academic_records %}
+                    <tr>
+                        <td>{{ record.course_id }}</td>
+                        <td>{{ title }}</td>
+                        <td>{{ record.semester }}</td>
+                        <td>{{ record.year }}</td>
+                        <td>{{ credits }}</td>
+                        <td>{{ record.internal_marks }}</td>
+                        <td>{{ record.final_marks }}</td>
+                        <td>{{ record.internal_marks + record.final_marks }}</td>
+                        <td>
+                            <span class="badge {% if record.grade == 'A' %}bg-success{% elif record.grade in ['B', 'C'] %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ record.grade }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if pagination.pages > 1 %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                <li class="page-item {% if pagination.page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('student_academic_records', page=pagination.prev_num, semester=current_semester) }}" tabindex="-1">Previous</a>
+                </li>
+                
+                {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('student_academic_records', page=page_num, semester=current_semester) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                <li class="page-item {% if pagination.page == pagination.pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('student_academic_records', page=pagination.next_num, semester=current_semester) }}">Next</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // You can add any specific JavaScript for this page here
+    });
+</script>
+{% endblock %}
